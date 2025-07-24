@@ -1,5 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+import json
+
+FILE = 'tasks.json'
 
 # Step 1: Get wikipedia article url
 def get_wikipedia_page(topic):
@@ -37,9 +40,17 @@ def get_related_links(soup):
             links.append(f"https://en.wikipedia.org/wiki/{href}")
     return list(set(links))[:10]
 
+def json_read(file):
+    with open(file, 'r') as fl:
+        return json.load(fl)
+
+def json_open(file, tasks):
+    with open(file, 'w') as fl:
+        json.dump(tasks, fl, indent=2)
+
 # Step 6: Main program
 def main():
-    topic = input("Enter a topic to search on wiki: ").strip()
+    topic = input("\nEnter a topic to search on wiki: ").strip()
     page_content = get_wikipedia_page(topic)
 
     if page_content:
@@ -48,6 +59,16 @@ def main():
         summary = extract_summary(soup)
         headings = extract_headings(soup)
         related_links = get_related_links(soup)
+
+        tasks = json_read(FILE)
+        article_data = {
+            "Title": title,
+            "Summary": summary,
+            "Heading": headings,
+            "RelatedLink": related_links
+        }
+        tasks.append(article_data)
+        json_open(FILE, tasks)
 
         print("\n---- Wikipedia Article Details ----")
         print(f"\nTitle: {title}")
@@ -60,7 +81,26 @@ def main():
         for link in related_links:
             print(f"- {link}")
 
+
 if __name__ == "__main__":
-    main()
+    while True:
+        print("\n---- Wiki Scraper Menu ----")
+        print("1. Enter what you want to search: ")
+        print("2. View saved information")
+        print("3. Exit\n")
+        choice = input("select your choice (1-2): ")
+        if choice == "1":
+            main()
+        elif choice == "2":
+            tasks = json_read(FILE)
+            if tasks:
+                print(f"\n---- Wiki Reports ----")
+                for idx, task in enumerate(tasks, start=1):
+                    print(f"{idx}. {task['Title']}, \nHeading List {task['Heading']}")
+        elif choice == "3":
+            print("\n---- GOOD BY ----")
+            break
+        else:
+            print("Invalid value")
 
 
